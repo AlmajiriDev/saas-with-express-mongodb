@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SaaS Microservice Architecture Blueprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f0f4f8;
+      }
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 350px;
+        max-height: 400px;
+      }
+      @media (max-width: 768px) {
+        .chart-container {
+          height: 300px;
+        }
+      }
+      .flowchart-node {
+        border: 2px solid #6d28d9;
+        background-color: #ede9fe;
+        color: #5b21b6;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        transition: transform 0.2s;
+      }
+      .flowchart-node:hover {
+        transform: translateY(-5px);
+      }
+      .flowchart-connector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6d28d9;
+      }
+    </style>
+    <!--
+    Narrative Plan:
+    1.  Hook: Start with a high-level title and introduction explaining the importance of solid architecture for SaaS.
+    2.  Core Decision (Multi-Tenancy): Visualize the three main multi-tenancy models in MongoDB, highlighting the pros and cons to guide the user to the recommended choice. Use a comparison layout.
+    3.  Microservice Blueprint: Use a structured HTML/CSS diagram to represent the core principles of microservice design (SRP, Bounded Contexts, Loose Coupling).
+    4.  The Data Layer: Focus on MongoDB-specific considerations, using a bar chart for indexing benefits and text callouts for other key points like enforcement and transactions.
+    5.  Connecting The Pieces: Create a comprehensive flowchart using HTML/CSS to illustrate the entire system architecture, from the API Gateway to inter-service communication (both sync and async).
+    6.  Non-Functional Requirements: Use a grid of icon-based cards to highlight key operational aspects like scalability, security, and reliability.
+    7.  Conclusion: End with a summary checklist for initial design steps.
+
+    Selected Color Palette: Energetic & Playful (#6D28D9, #D946EF, #FBBF24, #10B981, #3B82F6)
+
+    Visualization Choices:
+    - Multi-Tenancy Model Comparison: Goal: Compare. Visualization: Structured HTML/CSS cards. Justification: This clearly presents pros and cons side-by-side for easy comparison, which is better than a chart for qualitative data. NO SVG.
+    - Microservice Principles Diagram: Goal: Organize. Visualization: Structured HTML/CSS diagram. Justification: Clearly represents the distinct but related concepts of SRP, Bounded Contexts, and Coupling. NO SVG.
+    - Indexing Performance: Goal: Inform. Visualization: Bar Chart (Chart.js). Justification: A bar chart effectively demonstrates the performance difference between indexed and non-indexed queries. NO SVG.
+    - System Architecture Flow: Goal: Organize. Visualization: Flow Chart (HTML/CSS). Justification: A flowchart is the best way to show the process and relationships between different components like the API Gateway, services, and databases. NO SVG, NO MERMAID JS.
+    - Non-Functional Requirements: Goal: Inform. Visualization: Icon-based cards (Unicode characters + Tailwind CSS). Justification: Provides a quick, visually appealing summary of key concepts. NO SVG.
+
+    Confirmation: NEITHER Mermaid JS NOR SVG were used in this output. All diagrams are built with structured HTML and Tailwind CSS. All charts are rendered on Canvas via Chart.js.
+    -->
+  </head>
+  <body class="text-gray-800">
+    <div class="container mx-auto p-4 md:p-8">
+      <header class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-[#6D28D9] mb-2">
+          SaaS Microservice Architecture Blueprint
+        </h1>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+          A visual guide to designing a scalable, multi-tenant inventory application with Express.js
+          and MongoDB.
+        </p>
+      </header>
+
+      <main class="space-y-16">
+        <section id="multitenancy">
+          <h2 class="text-3xl font-bold text-center mb-8">
+            Core Decision: MongoDB Multi-Tenancy Strategy
+          </h2>
+          <div class="text-center mb-8 max-w-2xl mx-auto">
+            <p class="text-gray-700">
+              The most critical architectural choice is how you isolate tenant data. This decision
+              impacts cost, scalability, and security. While multiple models exist, the 'Shared
+              Collection with Tenant ID' approach offers the best balance for most SaaS
+              applications.
+            </p>
+          </div>
+          <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-gray-300">
+              <h3 class="font-bold text-xl mb-3">Separate Databases</h3>
+              <p class="font-semibold text-red-500 mb-2">High Cost & Complexity</p>
+              <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li><strong class="text-[#3B82F6]">Pro:</strong> Strongest data isolation.</li>
+                <li><strong class="text-red-500">Con:</strong> High operational overhead.</li>
+                <li><strong class="text-red-500">Con:</strong> Complex connection management.</li>
+              </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-[#10B981]">
+              <h3 class="font-bold text-xl mb-3">Shared Collection (Recommended)</h3>
+              <p class="font-semibold text-green-600 mb-2">Balanced & Scalable</p>
+              <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li>
+                  <strong class="text-[#10B981]">Pro:</strong> Simplest to manage & cost-effective.
+                </li>
+                <li>
+                  <strong class="text-[#10B981]">Pro:</strong> Excellent resource utilization.
+                </li>
+                <li>
+                  <strong class="text-red-500">Con:</strong> Requires diligent code enforcement.
+                </li>
+              </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-t-4 border-gray-300">
+              <h3 class="font-bold text-xl mb-3">Separate Collections</h3>
+              <p class="font-semibold text-yellow-500 mb-2">Niche & Less Common</p>
+              <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li><strong class="text-[#3B82F6]">Pro:</strong> Good resource utilization.</li>
+                <li><strong class="text-red-500">Con:</strong> Schema changes are complex.</li>
+                <li><strong class="text-red-500">Con:</strong> Can hit collection limits.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="principles">
+          <h2 class="text-3xl font-bold text-center mb-8">
+            Blueprint: Microservice Design Principles
+          </h2>
+          <div class="bg-white rounded-lg shadow-lg p-8">
+            <p class="text-center text-gray-700 mb-8">
+              Each Express.js app is a microservice. Structure them around these core principles to
+              ensure they are maintainable, independent, and resilient.
+            </p>
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+              <div class="bg-[#EDE9FE] p-6 rounded-lg">
+                <div class="text-4xl mb-3">🎯</div>
+                <h3 class="font-bold text-xl mb-2 text-[#6D28D9]">Single Responsibility</h3>
+                <p>
+                  One service, one job. An `Inventory Service` only handles inventory. This leads to
+                  smaller, focused, and more deployable units.
+                </p>
+              </div>
+              <div class="bg-[#FCE7F3] p-6 rounded-lg">
+                <div class="text-4xl mb-3">demarcate with lines or borders ↔️</div>
+                <h3 class="font-bold text-xl mb-2 text-[#D946EF]">Bounded Contexts</h3>
+                <p>
+                  Define clear boundaries. Each service owns its data and logic, preventing services
+                  from becoming tangled monoliths.
+                </p>
+              </div>
+              <div class="bg-[#FEF3C7] p-6 rounded-lg">
+                <div class="text-4xl mb-3">🔗</div>
+                <h3 class="font-bold text-xl mb-2 text-[#FBBF24]">Loose Coupling</h3>
+                <p>
+                  Services interact via well-defined APIs or async messages, not direct
+                  dependencies. Changes in one service won't break others.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="datalayer">
+          <h2 class="text-3xl font-bold text-center mb-8">
+            The Data Layer: MongoDB Considerations
+          </h2>
+          <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <h3 class="font-bold text-xl text-center mb-4">The Power of Compound Indexing</h3>
+              <p class="text-gray-700 mb-4 text-center">
+                In a multi-tenant setup, queries must be fast. A compound index on `tenant_id` and
+                another field is critical. It allows MongoDB to first isolate tenant data, then
+                perform the search, drastically reducing query time.
+              </p>
+              <div class="chart-container h-64 md:h-80">
+                <canvas id="indexingChart"></canvas>
+              </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 space-y-4">
+              <h3 class="font-bold text-xl text-center mb-4">Key Enforcement & Design Rules</h3>
+              <div class="flex items-start space-x-4">
+                <div class="text-2xl text-[#6D28D9] mt-1">🛡️</div>
+                <div>
+                  <h4 class="font-bold">`tenant_id` Enforcement</h4>
+                  <p class="text-gray-700">
+                    This is your primary defense against data leaks. Use application-level logic
+                    (like Mongoose middleware) to automatically inject the `tenant_id` from the
+                    user's secure token into every single database query. Never trust a `tenant_id`
+                    from the client.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4">
+                <div class="text-2xl text-[#10B981] mt-1">🔄</div>
+                <div>
+                  <h4 class="font-bold">Transactions</h4>
+                  <p class="text-gray-700">
+                    For operations that modify multiple documents (e.g., updating stock and creating
+                    a log entry), use MongoDB's native transactions to ensure all changes succeed or
+                    fail together, maintaining data integrity within a single service.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4">
+                <div class="text-2xl text-[#3B82F6] mt-1">📚</div>
+                <div>
+                  <h4 class="font-bold">Data Modeling</h4>
+                  <p class="text-gray-700">
+                    Balance embedding related data for read performance against referencing data for
+                    consistency. Denormalization is powerful in MongoDB but must be managed
+                    carefully to avoid complex writes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <h2 class="text-3xl font-bold text-center mb-8">
+            Connecting the Pieces: System Architecture Flow
+          </h2>
+          <div class="bg-white rounded-lg shadow-lg p-8">
+            <p class="text-center text-gray-700 mb-10 max-w-3xl mx-auto">
+              This flowchart illustrates how a user request travels through the system. The API
+              Gateway acts as the single entry point, authenticating the request and routing it to
+              the appropriate service, while services communicate with each other directly for
+              immediate needs or via a message bus for background tasks.
+            </p>
+            <div class="space-y-4">
+              <div class="flowchart-node">Client Application (Browser/Mobile)</div>
+              <div class="flowchart-connector text-5xl">↓</div>
+              <div class="flowchart-node bg-[#6D28D9] text-white">
+                API Gateway (Routing, Auth Validation, Rate Limiting)
+              </div>
+              <div class="flowchart-connector text-5xl">↓</div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 relative">
+                <div
+                  class="absolute h-1 bg-[#6D28D9] top-1/2 left-0 right-0 transform -translate-y-1/2 hidden md:block"
+                ></div>
+                <div class="flowchart-node z-10">Auth Service</div>
+                <div class="flowchart-node z-10">Inventory Service</div>
+                <div class="flowchart-node z-10">Order Service</div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 items-start">
+                <div class="text-center">
+                  <h4 class="font-bold text-lg mb-2">
+                    Synchronous Communication (Immediate Needs)
+                  </h4>
+                  <div class="p-4 bg-gray-50 rounded-lg border">
+                    <p class="text-sm text-gray-600 mb-4">Order Service → Inventory Service</p>
+                    <code class="bg-gray-200 text-gray-800 rounded px-2 py-1"
+                      >GET /stock/{itemId}</code
+                    >
+                    <p class="text-sm mt-2">
+                      Used for direct, request/response interactions where an immediate answer is
+                      required, like checking stock before placing an order.
+                    </p>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <h4 class="font-bold text-lg mb-2">Asynchronous Communication (Events)</h4>
+                  <div class="p-4 bg-gray-50 rounded-lg border">
+                    <p class="text-sm text-gray-600 mb-4">
+                      Order Service → Message Bus → Other Services
+                    </p>
+                    <code class="bg-gray-200 text-gray-800 rounded px-2 py-1"
+                      >Event: order.placed</code
+                    >
+                    <p class="text-sm mt-2">
+                      Used for decoupling services. An order placement event can trigger inventory
+                      updates, notifications, and billing without the Order Service needing to wait.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="nfrs">
+          <h2 class="text-3xl font-bold text-center mb-8">
+            Operational Pillars: Non-Functional Requirements
+          </h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <div class="text-5xl mb-3">🚀</div>
+              <h3 class="font-bold text-xl text-[#3B82F6]">Scalability</h3>
+              <p class="text-gray-600">
+                Design stateless services and use Docker/Kubernetes to scale horizontally.
+              </p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <div class="text-5xl mb-3">🔒</div>
+              <h3 class="font-bold text-xl text-[#10B981]">Security</h3>
+              <p class="text-gray-600">
+                Enforce data isolation, validate all input, and use HTTPS everywhere.
+              </p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <div class="text-5xl mb-3">❤️</div>
+              <h3 class="font-bold text-xl text-red-500">Reliability</h3>
+              <p class="text-gray-600">
+                Isolate failures and use monitoring/alerting to detect issues proactively.
+              </p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+              <div class="text-5xl mb-3">🛠️</div>
+              <h3 class="font-bold text-xl text-[#FBBF24]">DevOps</h3>
+              <p class="text-gray-600">
+                Use CI/CD for independent deployments and centralize logging for observability.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="text-center my-8">
+      <button
+        class="bg-[#6D28D9] text-white py-4 px-8 rounded"
+        onclick="window.location.href='/architecture.html'"
+      >
+        CLICK HERE TO VIEW THE FULL ARCHITECTURE FLOW
+      </button>
+    </div>
+
+    <script>
+      const wrapLabel = (label, maxLength) => {
+        if (label.length <= maxLength) {
+          return label;
+        }
+        const words = label.split(' ');
+        const lines = [];
+        let currentLine = '';
+        for (const word of words) {
+          if ((currentLine + ' ' + word).trim().length > maxLength) {
+            lines.push(currentLine.trim());
+            currentLine = word;
+          } else {
+            currentLine = (currentLine + ' ' + word).trim();
+          }
+        }
+        if (currentLine) {
+          lines.push(currentLine.trim());
+        }
+        return lines;
+      };
+
+      const tooltipTitleCallback = (tooltipItems) => {
+        const item = tooltipItems[0];
+        let label = item.chart.data.labels[item.dataIndex];
+        if (Array.isArray(label)) {
+          return label.join(' ');
+        }
+        return label;
+      };
+
+      const indexingChartCtx = document.getElementById('indexingChart').getContext('2d');
+      new Chart(indexingChartCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Simple Index on Name', wrapLabel('Compound Index (tenant_id, name)', 16)],
+          datasets: [
+            {
+              label: 'Relative Query Time (ms)',
+              data: [250, 15],
+              backgroundColor: ['#FBBF24', '#10B981'],
+              borderColor: ['#F59E0B', '#059669'],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Query Time (Lower is Better)',
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                title: tooltipTitleCallback,
+              },
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

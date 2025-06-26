@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alpha Project Architecture SaaS Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- 
+    Source Material Analysis & Narrative Plan:
+    1.  Source: saas-full-architecture document.
+    2.  Narrative Flow: Tell the story of a request flowing through the system, from the big picture down to specific interactions.
+        -   Hook: A compelling title and intro.
+        -   The Blueprint: A high-level flowchart of the entire architecture (Client -> Gateway -> Services -> Broker -> DBs).
+        -   Communication Patterns: Visually compare Sync vs. Async communication, showing their respective roles.
+        -   Use Case Deep Dive: A detailed flowchart of a common user action ("Placing an Order") to show inter-service communication.
+        -   Service Responsibilities: A radar chart to visualize how different services handle various aspects of the system.
+        -   The SaaS Foundation: A dedicated section to explain the critical concept of multi-tenancy.
+        -   Conclusion: Summarize the key architectural pillars.
+
+    Selected Color Palette: Energetic & Playful (#6D28D9, #D946EF, #FBBF24, #10B981, #3B82F6)
+
+    Visualization Choices & Justification (NO SVG/Mermaid JS Confirmed):
+    -   Architectural Blueprint: Goal: Organize. Visualization: Flowchart (HTML/CSS). Justification: Best way to show high-level system structure. NO SVG.
+    -   Communication Mix: Goal: Compare. Visualization: Donut Chart (Chart.js). Justification: Effectively shows the proportional relationship between sync and async calls in a healthy system. NO SVG.
+    -   Order Placement Flow: Goal: Organize. Visualization: Detailed Flowchart (HTML/CSS). Justification: Clearly illustrates a step-by-step process involving multiple components. NO SVG, NO MERMAID JS.
+    -   Service Responsibilities: Goal: Compare. Visualization: Radar Chart (Chart.js). Justification: Excellent for comparing multiple entities (services) across multiple quantitative axes (responsibilities). NO SVG.
+    -   Multi-Tenancy Visual: Goal: Inform. Visualization: Diagram (HTML/CSS Unicode Icons). Justification: A simple visual metaphor is more effective than a chart for this conceptual point. NO SVG.
+    
+    Confirmation: NEITHER Mermaid JS NOR SVG were used in this output. All diagrams are built with structured HTML and Tailwind CSS. All charts are rendered on Canvas via Chart.js.
+    -->
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f0f4f8;
+      }
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 350px;
+        max-height: 400px;
+      }
+      .section-card {
+        background-color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        padding: 2rem;
+      }
+      .flow-node {
+        border: 2px solid;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+        background-color: white;
+      }
+      .flow-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 2rem;
+        margin: 0.5rem 0;
+      }
+      .step-connector {
+        position: relative;
+        height: 3rem;
+        width: 2px;
+        margin: 0 auto;
+        background-image: linear-gradient(to bottom, #94a3b8 60%, transparent 40%);
+        background-size: 2px 10px;
+      }
+      .step-connector::after {
+        content: '▼';
+        position: absolute;
+        bottom: -0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #64748b;
+        background-color: #f0f4f8;
+        padding: 0 0.25rem;
+      }
+    </style>
+  </head>
+  <body class="text-gray-800">
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+      <header class="text-center mb-16">
+        <h1 class="text-4xl md:text-6xl font-black text-[#6D28D9] mb-4">
+          The Anatomy of TekTariq's Alpha Project Architecture
+        </h1>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+          A visual deep-dive into the microservice architecture powering a scalable, multi-tenant
+          inventory management system.
+        </p>
+      </header>
+
+      <main class="space-y-20">
+        <section id="blueprint">
+          <h2 class="text-3xl font-bold text-center mb-2">The Architectural Blueprint</h2>
+          <p class="text-center text-gray-700 mb-8 max-w-2xl mx-auto">
+            At a high level, a user request flows through a series of specialized layers, each with
+            a distinct purpose, ensuring security, scalability, and organization.
+          </p>
+          <div class="space-y-4">
+            <div class="flow-node border-pink-400 text-pink-600 bg-pink-50">
+              Client App (Web/Mobile)
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node border-amber-400 text-amber-600 bg-amber-50">API Gateway</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node border-violet-400 text-violet-600 bg-violet-50">
+              Microservices Layer
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node border-purple-400 text-purple-600 bg-purple-50">
+              Message Broker (Async Events)
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node border-blue-400 text-blue-600 bg-blue-50">
+              Database Layer (MongoDB)
+            </div>
+          </div>
+        </section>
+
+        <section id="communication">
+          <h2 class="text-3xl font-bold text-center mb-2">
+            Communication Patterns: Sync vs. Async
+          </h2>
+          <p class="text-center text-gray-700 mb-8 max-w-2xl mx-auto">
+            A robust system uses two primary communication methods. Synchronous calls are direct
+            requests that need an immediate answer, while asynchronous events decouple services for
+            better resilience and scale.
+          </p>
+          <div class="section-card grid md:grid-cols-2 gap-8 items-center">
+            <div class="text-center">
+              <h3 class="text-xl font-bold text-[#6D28D9] mb-4">Ideal Communication Mix</h3>
+              <div class="chart-container h-64">
+                <canvas id="communicationMixChart"></canvas>
+              </div>
+            </div>
+            <div class="space-y-6">
+              <div>
+                <h4 class="font-bold text-lg text-[#3B82F6]">Synchronous (HTTP/REST)</h4>
+                <p class="text-gray-600">
+                  <strong>Use Case:</strong> Checking inventory stock before placing an order. An
+                  immediate "yes" or "no" is required to proceed.
+                </p>
+              </div>
+              <div>
+                <h4 class="font-bold text-lg text-[#D946EF]">Asynchronous (Events)</h4>
+                <p class="text-gray-600">
+                  <strong>Use Case:</strong> After an order is placed, an `order.placed` event is
+                  published. Other services can listen and react independently (e.g., sending an
+                  email, updating analytics) without slowing down the initial order process.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="flow">
+          <h2 class="text-3xl font-bold text-center mb-2">A Day in the Life of a Request</h2>
+          <p class="text-center text-gray-700 mb-8 max-w-2xl mx-auto">
+            Let's trace the journey of a single user action—placing an order—to see how services
+            collaborate both synchronously and asynchronously.
+          </p>
+          <div class="section-card">
+            <div class="space-y-4">
+              <div class="text-center">
+                <span class="font-bold text-lg bg-amber-100 text-amber-800 px-3 py-1 rounded-full"
+                  >1. Place Order</span
+                >
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                Client sends order details to the API Gateway.
+              </p>
+              <div class="step-connector"></div>
+              <div class="text-center">
+                <span class="font-bold text-lg bg-violet-100 text-violet-800 px-3 py-1 rounded-full"
+                  >2. Route & Authenticate</span
+                >
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                API Gateway validates the user's JWT, extracts the `tenant_id`, and forwards the
+                request to the Sales Service.
+              </p>
+              <div class="step-connector"></div>
+              <div class="text-center">
+                <span class="font-bold text-lg bg-green-100 text-green-800 px-3 py-1 rounded-full"
+                  >3. Check Stock (Sync Call)</span
+                >
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                Sales Service makes a direct HTTP request to the Inventory Service to confirm
+                product availability. The process waits for a response.
+              </p>
+              <div class="step-connector"></div>
+              <div class="text-center">
+                <span class="font-bold text-lg bg-blue-100 text-blue-800 px-3 py-1 rounded-full"
+                  >4. Record Sale & Respond</span
+                >
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                With stock confirmed, the Sales Service records the sale in its database and sends a
+                "Success" response back to the client via the Gateway.
+              </p>
+              <div class="step-connector"></div>
+              <div class="text-center">
+                <span class="font-bold text-lg bg-purple-100 text-purple-800 px-3 py-1 rounded-full"
+                  >5. Publish Event (Async)</span
+                >
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                The Sales Service publishes an `order.placed` event to the Message Broker. This
+                action is "fire and forget" and doesn't block the user.
+              </p>
+              <div class="step-connector"></div>
+              <div class="text-center">
+                <span class="font-bold text-lg bg-pink-100 text-pink-800 px-3 py-1 rounded-full"
+                  >6. Fan Out</span
+                >
+              </div>
+              <p class="text-center text-sm text-gray-600">
+                Multiple services (Notification, Analytics, Reporting) subscribed to the
+                `order.placed` event receive it and perform their respective jobs in the background.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="responsibilities">
+          <h2 class="text-3xl font-bold text-center mb-2">Microservice Responsibilities</h2>
+          <p class="text-center text-gray-700 mb-8 max-w-2xl mx-auto">
+            Each microservice has a specialized role. This radar chart visualizes the focus of key
+            services across different operational areas, from direct user interaction to backend
+            data processing.
+          </p>
+          <div class="section-card">
+            <div class="chart-container h-80 md:h-96">
+              <canvas id="responsibilitiesChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section id="multitenancy-foundation">
+          <h2 class="text-3xl font-bold text-center mb-2">The SaaS Foundation: Multi-Tenancy</h2>
+          <p class="text-center text-gray-700 mb-8 max-w-2xl mx-auto">
+            The single most important concept for a SaaS application is isolating one customer's
+            data from another. This is achieved by tagging every single piece of data with a unique
+            `tenant_id`.
+          </p>
+          <div class="section-card text-center">
+            <div class="text-8xl mb-4">🔑</div>
+            <h3 class="text-2xl font-bold text-[#6D28D9]">
+              The Golden Rule: Every Query is Scoped
+            </h3>
+            <p class="text-gray-600 mt-2">
+              No data is ever created, read, updated, or deleted without a `tenant_id` filter. This
+              non-negotiable rule is enforced at the application's data access layer to guarantee
+              data privacy and security.
+            </p>
+            <div class="mt-8 bg-gray-50 p-4 rounded-lg border max-w-md mx-auto">
+              <p class="font-mono text-left text-sm">
+                <span class="text-blue-600">db.products.find</span>({
+              </p>
+              <p class="font-mono text-left text-sm pl-4">
+                <span class="text-red-500 font-semibold">tenant_id: "tenant-alpha"</span>,
+              </p>
+              <p class="font-mono text-left text-sm pl-4">name: "Super Widget"</p>
+              <p class="font-mono text-left text-sm">});</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const wrapLabel = (label, maxLength) => {
+        if (label.length <= maxLength) return label;
+        const words = label.split(' ');
+        const lines = [];
+        let currentLine = '';
+        words.forEach((word) => {
+          if ((currentLine + ' ' + word).trim().length > maxLength) {
+            lines.push(currentLine.trim());
+            currentLine = word;
+          } else {
+            currentLine = (currentLine + ' ' + word).trim();
+          }
+        });
+        if (currentLine) lines.push(currentLine.trim());
+        return lines;
+      };
+
+      const tooltipTitleCallback = (tooltipItems) => {
+        const item = tooltipItems[0];
+        let label = item.chart.data.labels[item.dataIndex];
+        if (Array.isArray(label)) return label.join(' ');
+        return label;
+      };
+
+      const defaultChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { callbacks: { title: tooltipTitleCallback } },
+        },
+      };
+
+      const communicationCtx = document.getElementById('communicationMixChart').getContext('2d');
+      new Chart(communicationCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Asynchronous (Events)', 'Synchronous (REST)'],
+          datasets: [
+            {
+              label: 'Communication Mix',
+              data: [65, 35],
+              backgroundColor: ['#D946EF', '#3B82F6'],
+              borderColor: '#F0F4F8',
+              borderWidth: 4,
+            },
+          ],
+        },
+        options: { ...defaultChartOptions },
+      });
+
+      const responsibilitiesCtx = document.getElementById('responsibilitiesChart').getContext('2d');
+      new Chart(responsibilitiesCtx, {
+        type: 'radar',
+        data: {
+          labels: [
+            'User Interaction',
+            'Real-time Logic',
+            'Data Aggregation',
+            'External Comms',
+            'Core Business Rules',
+          ],
+          datasets: [
+            {
+              label: 'Sales & Orders Service',
+              data: [8, 9, 4, 7, 9],
+              borderColor: '#3B82F6',
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            },
+            {
+              label: 'Inventory Service',
+              data: [5, 8, 6, 3, 8],
+              borderColor: '#10B981',
+              backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            },
+            {
+              label: 'Analytics Service',
+              data: [3, 2, 10, 1, 6],
+              borderColor: '#FBBF24',
+              backgroundColor: 'rgba(251, 191, 36, 0.2)',
+            },
+          ],
+        },
+        options: {
+          ...defaultChartOptions,
+          scales: {
+            r: {
+              angleLines: { color: '#E5E7EB' },
+              grid: { color: '#E5E7EB' },
+              pointLabels: { font: { size: 12 } },
+              ticks: { backdropColor: '#F0F4F8', color: '#4B5563' },
+              suggestedMin: 0,
+              suggestedMax: 10,
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
